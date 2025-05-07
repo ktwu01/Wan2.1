@@ -221,6 +221,32 @@ chmod +x run_wan2_small.sh
 ./run_wan2.sh "Two anthropomorphic cats in comfy boxing gear and bright gloves fight intensely on a spotlighted stage."
 ```
 
+```
+cat > run_wan2_small_model.sh << 'EOL'
+#!/bin/bash
+
+# Set environment variables for better memory management
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True,max_split_size_mb=128
+export CUDA_VISIBLE_DEVICES=0
+
+# Use the smaller 1.3B model instead of 14B
+python generate.py \
+  --task t2v-1.3B \
+  --size 832*480 \
+  --offload_model True \
+  --t5_cpu \
+  --sample_steps 30 \
+  --ckpt_dir ./Wan2.1-T2V-1.3B \
+  --prompt "$1"
+EOL
+
+chmod +x run_wan2_small_model.sh
+```
+
+```
+./run_wan2_small_model.sh "Two anthropomorphic cats in comfy boxing gear and bright gloves fight intensely on a spotlighted stage."
+```
+
 
 > 💡Note: If you are using the `T2V-1.3B` model, we recommend setting the parameter `--sample_guide_scale 6`. The `--sample_shift parameter` can be adjusted within the range of 8 to 12 based on the performance.
 
