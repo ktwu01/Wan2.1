@@ -188,25 +188,30 @@ pip install requirements.txt --target=$WORKLIB/python
 Step 3: Memory Management for Large Model
 The 14B model is attempting to load entirely into GPU memory. You need to enable model offloading to CPU and/or use gradient checkpointing:
 ```bash
-# Create a run script with optimized parameters
-cat > run_wan2.sh << 'EOL'
+cat > run_wan2_small.sh << 'EOL'
 #!/bin/bash
 
 # Set environment variables for better memory management
-export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True,max_split_size_mb=128
 export CUDA_VISIBLE_DEVICES=0
 
-# Run with optimized parameters
+# Run with significantly reduced parameters for lower memory usage
 python generate.py \
   --task t2v-14B \
-  --size 1280*720 \
+  --size 480*832 \
+  --frame_num 41 \
   --offload_model True \
-  --t5_cpu True \
-  --sample_steps 30 \
+  --t5_cpu \
+  --sample_steps 20 \
+  --ckpt_dir ./Wan2.1-T2V-14B \
   --prompt "$1"
 EOL
 
-chmod +x run_wan2.sh
+chmod +x run_wan2_small.sh
+```
+
+```
+./run_wan2.sh "Two anthropomorphic cats in comfy boxing gear and bright gloves fight intensely on a spotlighted stage."
 ```
 
 
