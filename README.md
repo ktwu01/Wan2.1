@@ -157,6 +157,59 @@ If you encounter OOM (Out-of-Memory) issues, you can use the `--offload_model Tr
 python generate.py  --task t2v-1.3B --size 832*480 --ckpt_dir ./Wan2.1-T2V-1.3B --offload_model True --t5_cpu --sample_shift 8 --sample_guide_scale 6 --prompt "Two anthropomorphic cats in comfy boxing gear and bright gloves fight intensely on a spotlighted stage."
 ```
 
+Step 1: Request GPU Resources
+```bash
+# From a login node, request an A100 GPU node
+idev -p gpu-a100 -N 1 -n 1 -t 02:00:00
+```
+
+Step 2: Set Up Environment
+
+```bash
+cd Wan2.1
+# Purge existing modules
+module purge
+
+# Load necessary modules
+module load tacc-apptainer
+module load cuda
+module load python3
+
+# Create conda environment (if not already created)
+# Skip this if environment already exists
+source $WORK/miniconda3/etc/profile.d/conda.sh
+condawork wan2_env python=3.9
+conda activate $WORK/conda_envs/wan2_env
+
+# Install required packages
+pip install requirements.txt --target=$WORKLIB/python
+```
+
+Step 3: Memory Management for Large Model
+The 14B model is attempting to load entirely into GPU memory. You need to enable model offloading to CPU and/or use gradient checkpointing:
+```bash
+# Create a run script with optimized parameters
+cat > run_wan2.sh << 'EOL'
+#!/bin/bash
+
+# Set environment variables for better memory management
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+export CUDA_VISIBLE_DEVICES=0
+
+# Run with optimized parameters
+python generate.py \
+  --task t2v-14B \
+  --size 1280*720 \
+  --offload_model True \
+  --t5_cpu True \
+  --sample_steps 30 \
+  --prompt "$1"
+EOL
+
+chmod +x run_wan2.sh
+```
+
+
 > 💡Note: If you are using the `T2V-1.3B` model, we recommend setting the parameter `--sample_guide_scale 6`. The `--sample_shift parameter` can be adjusted within the range of 8 to 12 based on the performance.
 
 
