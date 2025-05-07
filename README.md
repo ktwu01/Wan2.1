@@ -158,8 +158,15 @@ python generate.py  --task t2v-1.3B --size 832*480 --ckpt_dir ./Wan2.1-T2V-1.3B 
 ```
 
 Step 1: Request GPU Resources
+For your Wan2.1 text-to-video model (especially the 14B version), the H100 would be significantly better if you can get access. I notice there are 3 idle H100 nodes available (c318-[002-004]).
+
+To request an H100 node:
 ```bash
-# From a login node, request an A100 GPU node
+idev -p gpu-h100 -N 1 -n 1 -t 02:00:00
+```
+
+If H100 allocation fails, then fall back to A100:
+```bash
 idev -p gpu-a100 -N 1 -n 1 -t 02:00:00
 ```
 
